@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SmartSchool.WebAPI.Data;
 
 namespace SmartSchool.WebAPI.Models
 {
@@ -8,7 +9,7 @@ namespace SmartSchool.WebAPI.Models
         
         public Aluno(int alunoId, string nomeAluno, string sobreNomeAluno, string telefone)
         {
-            this.alunoId = alunoId;
+            this.alunoId =  alunoId;
             this.NomeAluno = nomeAluno;
             this.SobreNomeAluno = sobreNomeAluno;
             this.Telefone = telefone;
