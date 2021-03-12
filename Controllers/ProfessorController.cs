@@ -11,66 +11,100 @@ namespace SmartSchool.WebAPI.Controllers
     [Route("api/[Controller]")]
     public class ProfessorController : ControllerBase
     {
-        private readonly SmartDbContext _Context;
+        private readonly IRepository _Repor;
 
-        public ProfessorController(SmartDbContext Context) 
-        { 
-            _Context = Context;
+        public ProfessorController(IRepository repository)
+        {
+            _Repor = repository;
         }
 
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult GetAll()
         {
-            return Ok();
+            var retornarProfessor = _Repor.GetallProfessores(false);
+            return Ok(retornarProfessor);
         }
 
-        [HttpPost]
+         [HttpGet("{id}")]
+        public IActionResult GetAll(int id)
+        {
+            var retornarProfessor = _Repor.GetProfessorByID(id, false);
+            if(retornarProfessor == null)
+            {
+               return BadRequest("Não foi prossivel retonar professor");     
+            }
+
+            return Ok(retornarProfessor);
+        }
+
+        [HttpPost("{id}")]
         public IActionResult Post(Professor professor)
         {
-           
-           _Context.Add(professor);
-           _Context.SaveChanges();
-           return Ok(professor);
+            _Repor.add(professor);
+
+            if (_Repor.SaveChanges(professor))
+            {
+               return Ok(professor);
+            }
+          
+            return BadRequest("Não foi possível incluir professor");
         }
 
-        [HttpPatch]
-        public IActionResult Patch(int id, Professor professor)
+        [HttpPatch("{id}")]
+        public IActionResult Patch(int id)
         {
-           var ProfessorPatch = _Context.Professores.FirstOrDefault(a => a.professorID == id);
-           if(ProfessorPatch == null)
-           {
-              return BadRequest("Aluno não encontrado");
-           }
-           _Context.Update(ProfessorPatch);
-           _Context.SaveChanges();
+            var ProfessorPatch = _Repor.GetProfessorByID(id, false);
 
-           return Ok(ProfessorPatch);
+            if (ProfessorPatch == null)
+            {
+                return BadRequest("Aluno não encontrado");
+            }
+            
+             _Repor.Update(ProfessorPatch);
+
+            if (_Repor.SaveChanges(ProfessorPatch))
+            {
+               return Ok(ProfessorPatch);
+            }
+          
+            return BadRequest("Não foi possível alterar professor");
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(int id, Professor professor)
+        public IActionResult Put(int id)
         {
-           var professorPut = _Context.Professores.AsNoTracking().FirstOrDefault(a => a.professorID == id);
-           if(professorPut == null)
-           {
-              return BadRequest("Aluno não encontrado");
-           }
-           _Context.Update(professorPut);
-           _Context.SaveChanges();
-           return Ok(professorPut);
+            var professorPut = _Repor.GetAlunosByID(id, false);
+            if (professorPut == null)
+            {
+                return BadRequest("Aluno não encontrado");
+            }
+            
+            _Repor.Update(professorPut);
+
+            if (_Repor.SaveChanges(professorPut))
+            {
+               return Ok(professorPut);
+            }
+          
+            return BadRequest("Não foi possível alterar professor");
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-         var professorDelete = _Context.Professores.AsNoTracking().FirstOrDefault(a => a.professorID == id);
-           if(professorDelete == null)
-           {
-              return BadRequest("Aluno não encontrado");
-           }
-           _Context.Remove(professorDelete);
-           _Context.SaveChanges();
-            return Ok();
+            var professorDelete = _Repor.GetAlunosByID(id, false);
+            if (professorDelete == null)
+            {
+                return BadRequest("Aluno não encontrado");
+            }
+            _Repor.Delete(professorDelete);
+
+            if (_Repor.SaveChanges(professorDelete))
+            {
+               return Ok("Exclusão realizada com sucesso.");
+            }
+          
+            return BadRequest("Não foi possível excluir professor");
         }
     }
 }

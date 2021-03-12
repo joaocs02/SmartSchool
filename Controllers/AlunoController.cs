@@ -11,77 +11,96 @@ namespace SmartSchool.WebAPI.Controllers
     [Route("api/[Controller]")]
     public class AlunoController : ControllerBase
     {
-        
-        private readonly SmartDbContext _Context;
-        public AlunoController(SmartDbContext Context)
+        private readonly IRepository _repor;
+
+        public AlunoController(IRepository repor)
         {
-            _Context = Context;
+            _repor = repor;
         }
 
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult GetAllAluno()
         {
-            return Ok(_Context.Alunos);
+           var AlunoRetorno = _repor.GetallAlunos(true);
+            return Ok(AlunoRetorno);
         }
 
-       [HttpGet("byName")]
-        public IActionResult GetbyName(string nome, string sobreNome)
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
         {
-           var AlunosRetorno = _Context.Alunos.AsNoTracking().FirstOrDefault(a => 
-            a.NomeAluno.Contains(nome) && a.SobreNomeAluno.Contains(sobreNome));  
+           var AlunoResult = _repor.GetAlunosByID(id, false);
 
-           if (AlunosRetorno == null) return BadRequest("Não foi possivel encontrar o Aluno");
-
-           return Ok(AlunosRetorno);
-        }
-
-        [HttpPost]
-        public IActionResult Post(Aluno aluno)
-        {
-           _Context.Add(aluno);
-           _Context.SaveChanges();
-           return Ok(aluno);
-        }
-
+           if (AlunoResult == null) return BadRequest("Não foi possivel retornar o Aluno"); 
         
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, Aluno aluno)
-        {
-           var alunoPut = _Context.Alunos.AsNoTracking().FirstOrDefault(a => a.alunoId == id);
-           if(alunoPut == null)
-           {
-              return BadRequest("Aluno não encontrado");
-           }
-           _Context.Update(aluno);
-           _Context.SaveChanges();
-           return Ok(aluno);
+            return Ok(AlunoResult);
         }
 
-          [HttpPatch]
+         [HttpPost]
+         public IActionResult Post(Aluno aluno)
+         {
+            _repor.add(aluno);
+
+            if (_repor.SaveChanges(aluno))
+            {
+               return Ok(aluno);
+            }
+            return  BadRequest("Não foi possível incluir aluno");
+         }
+
+
+         [HttpPut("{id}")]
+         public IActionResult Put(int id, Aluno aluno)
+         {
+            var alunoPut = _repor.GetAlunosByID(id, true);
+            if (alunoPut == null)
+            {
+                  return BadRequest("Aluno não encontrado");
+            }
+
+           _repor.Update(alunoPut);
+
+            if (_repor.SaveChanges(alunoPut))
+            {
+               return Ok(alunoPut);
+            }
+            return  BadRequest("Não foi possível incluir aluno");
+         }
+
+         [HttpPatch]
          public IActionResult Patch(int id, Aluno aluno)
-        {
-           var alunoPatch = _Context.Alunos.FirstOrDefault(a => a.alunoId == id);
-           if(alunoPatch == null)
-           {
-              return BadRequest("Aluno não encontrado");
-           }
-           _Context.Update(aluno);
-           _Context.SaveChanges();
-           return Ok(aluno);
-        }
+         {
+            var alunoPatch = _repor.GetAlunosByID(id, false);
+            if (alunoPatch == null)
+            {
+                  return BadRequest("Aluno não encontrado");
+            }
+          
+           _repor.Update(alunoPatch);
 
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
-        {
-         var alunoDelete = _Context.Alunos.FirstOrDefault(a => a.alunoId == id);
-           if(alunoDelete == null)
-           {
-              return BadRequest("Aluno não encontrado");
-           }
-           _Context.Remove(alunoDelete);
-           _Context.SaveChanges();
-            return Ok();
-        }
+            if (_repor.SaveChanges(alunoPatch))
+            {
+               return Ok(alunoPatch);
+            }
+            return  BadRequest("Não foi possível alterar aluno");
+         }
 
-    }
+         [HttpDelete("{id}")]
+         public IActionResult Delete(int id)
+         {
+            var alunoDelete = _repor.GetAlunosByID(id, false);
+            if (alunoDelete == null)
+            {
+                  return BadRequest("Aluno não encontrado");
+            }
+
+            _repor.Delete(alunoDelete);
+
+            if (_repor.SaveChanges(alunoDelete))
+            {
+               return Ok("Exclusão realizada com sucesso");
+            }
+            return  BadRequest("Não foi possível excluir aluno");
+         }
+
+}
 }
